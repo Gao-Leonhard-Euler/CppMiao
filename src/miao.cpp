@@ -7,6 +7,7 @@
 #include<algorithm>
 #include<assert.h>
 using namespace std;
+vector<string>keywords;
 void readlines(char* filename,vector<vector<pair<bool,string>>>&lines){
     FILE*fp=fopen(filename,"r");
     string s,e;
@@ -199,16 +200,19 @@ void work(char* filename){
     for(auto i:cnt)rk.push_back(make_pair(i.second,i.first));
     sort(rk.begin(),rk.end());
     FILE*fp=fopen(filename,"w");
-    for(size_t i=0;i<rk.size();i++){
-        rank[rk[i].second]=i+2;
+    for(size_t i=0,icnt=0,add=keywords.size();i<rk.size();i++){
         fprintf(fp,"#define ");
-        size_t r=i+2;
+        if(icnt==add){
+            add*=keywords.size();
+            icnt=0;
+        }
+        size_t r=rank[rk[i].second]=icnt+add;
         while(r>1){
-            if(r&1)fprintf(fp,"喵");
-            else fprintf(fp,"呜");
-            r>>=1;
+            fprintf(fp,keywords[r%keywords.size()].c_str());
+            r/=keywords.size();
         }
         fprintf(fp," %s\n",rk[i].second.c_str());
+        icnt++;
     }
     bool e=0;
     for(auto&line:lines){
@@ -217,9 +221,8 @@ void work(char* filename){
                 if(!e)fputc(' ',fp);
                 size_t r=rank[i.second];
                 while(r>1){
-                    if(r&1)fprintf(fp,"喵");
-                    else fprintf(fp,"呜");
-                    r>>=1;
+                    fprintf(fp,keywords[r%keywords.size()].c_str());
+                    r/=keywords.size();
                 }
                 e=0;
             }
@@ -230,7 +233,29 @@ void work(char* filename){
         fputc('\n',fp);
     }
 }
+void readKeywords(char* filename){
+    FILE*fp=fopen(filename,"r");
+    string s;s.clear();
+    keywords.clear();
+    while(!feof(fp)){
+        wint_t c=fgetwc(fp);
+        if(c==(wint_t)'\n'||c==(wint_t)'\t'||c==(wint_t)' '||c==(wint_t)'\r'){
+            if(!s.empty()){
+                keywords.push_back(s);
+                s.clear();
+            }
+        }
+        else if(c!=0&&c!=(wint_t)EOF)s+=c;
+    }
+    if(!s.empty())keywords.push_back(s);
+}
 int main(int argc,char *argv[]){
-    for(int i=1;i<argc;i++)work(argv[i]);
+    keywords=vector<string>{"喵","呜"};
+    for(int i=1;i<argc;i++){
+        if(string(argv[i])=="-k")
+            readKeywords(argv[++i]);
+        else if(string(argv[i])=="-f")
+            work(argv[++i]);
+    }
     return 0;
 }
