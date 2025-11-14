@@ -230,7 +230,7 @@ void work(char* filename){
                 fprintf(fp,"%s",i.second.c_str());
                 e=1;
             }
-        fputc('\n',fp);
+        fputc('\n',fp);e=1;
     }
 }
 void readKeywords(char* filename){
